@@ -1,0 +1,102 @@
+﻿@model DemoUploadFileBas64.Models.UploadedFile
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Upload File</h3>
+                </div>
+                <div class="card-body">
+                    <div id="message" class="alert" role="alert" style="display: none;"></div>
+                    <div id="error" class="alert" role="alert" style="display: none;"></div>
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="file">Choose File:</label>
+                            <input type="file" class="form-control-file" id="file" name="file">
+                            <span id="fileError" class="text-danger"></span>
+                        </div>
+                        <button type="button" id="uploadBtn" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script>
+        $(document).ready(function () {
+            $('#uploadBtn').click(function () {
+                var fileInput = document.getElementById('file');
+                var file = fileInput.files[0];
+                var formData = new FormData();
+                formData.append('file', file);
+
+                var loading = Swal.fire({
+                    title: 'Uploading...',
+                    allowOutsideClick: false,
+                    onBeforeOpen: () => {
+                        Swal.showLoading();
+                    },
+                    didOpen: () => {
+                        Swal.getContent().querySelector('div.swal2-actions').insertAdjacentHTML('afterend', '<div id="progressBar" class="progress mt-2"><div id="progressBarValue" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div></div>');
+                    }
+                });
+
+                $.ajax({
+                    url: '/Home/Upload',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    xhr: function () {
+                        var xhr = new window.XMLHttpRequest();
+                        xhr.upload.addEventListener('progress', function (event) {
+                            if (event.lengthComputable) {
+                                var percentComplete = (event.loaded / event.total) * 100;
+                                $('#progressBarValue').css('width', percentComplete + '%').attr('aria-valuenow', percentComplete).text(percentComplete.toFixed(2) + '%');
+                            }
+                        }, false);
+                        return xhr;
+                    },
+                    success: function (response) {
+                        loading.close();
+
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: response.message
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message
+                            });
+                        }
+
+                        $('#file').val('');
+                    },
+                    error: function () {
+                        loading.close();
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error uploading file'
+                        });
+
+                        $('#file').val('');
+                    }
+                });
+            });
+        });
+    </script>
+}

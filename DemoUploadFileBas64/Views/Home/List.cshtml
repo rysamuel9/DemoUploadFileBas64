@@ -1,0 +1,82 @@
+﻿@model List<DemoUploadFileBas64.Models.UploadedFile>
+@{
+    ViewData["Title"] = "Uploaded Files";
+}
+
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+    }
+
+    .card {
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+        .card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+        }
+
+    .card-img-top {
+        border-radius: 10px 10px 0 0;
+    }
+
+    .card-icon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .card:hover .card-icon {
+        opacity: 1;
+    }
+</style>
+
+<h2 class="text-center">Uploaded Files</h2>
+
+<div class="row row-cols-1 row-cols-md-5">
+    @foreach (var file in Model)
+    {
+        <div class="col mb-4">
+            <div class="card">
+                <div class="card-body p-2">
+                    @if (file.FileType == "text/plain")
+                    {
+                        <pre class="m-0">@System.Text.Encoding.UTF8.GetString(file.FileData)</pre>
+                    }
+                    else if (file.FileType.StartsWith("image/"))
+                    {
+                        <img src="data:@file.FileType;base64,@System.Convert.ToBase64String(file.FileData)" class="card-img-top img-fluid rounded" style="max-height: 200px;" />
+                    }
+                    else if (file.FileType.StartsWith("video/"))
+                    {
+                        <video controls class="card-img-top img-fluid rounded" style="max-height: 200px;">
+                            <source src="data:@file.FileType;base64,@System.Convert.ToBase64String(file.FileData)" type="@file.FileType">
+                            Your browser does not support the video tag.
+                        </video>
+                    }
+                    else
+                    {
+                        <embed src="data:application/pdf;base64,@System.Convert.ToBase64String(file.FileData)" type="application/pdf" width="100%" height="200px" />
+                    }
+                    <p class="card-text mt-2">
+                        <small><strong>Type:</strong> @file.FileType</small><br />
+                        <small><strong>Size:</strong> @file.FileSize bytes</small><br />
+                        <small><strong>Upload Date:</strong> @file.UploadDate</small>
+                    </p>
+                    <div class="card-icon">
+                        <a href="#" class="btn btn-sm btn-outline-primary mr-1"><i class="bi bi-download"></i></a>
+                        <a href="#" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
